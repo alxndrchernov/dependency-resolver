@@ -1,0 +1,13 @@
+{
+  "name": "alxndrchernov/dependency-resolver",
+  "type": "library",
+  "description": "Simply dependency resolver for your app",
+  "require": {
+    "php": "^7.4|>=8"
+  },
+  "autoload": {
+    "classmap": [
+      "/src"
+    ]
+  }
+}
