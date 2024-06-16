@@ -13,7 +13,7 @@ class Container
     /**
      * @var array
      */
-    private array $classes = [];
+    private array $instances = [];
 
     /**
      * @param InstanceMap $map
@@ -22,34 +22,41 @@ class Container
      */
     final public function __construct(InstanceMap $map)
     {
-        $m = $this->getRegisterInstances($map);
-        foreach ($map->getInstanceMap() as $instance) {
-            try {
-                $constrParams = [];
-
-                foreach ($instance::getConstructDependencies() as $depName) {
-                    $constrParams[] = new $m[$depName];
-                }
-
-                $this->classes[$instance] = new $instance(...$constrParams);
-            } catch (Throwable $e) {
-                throw new ContainerMapException($e->getMessage());
-            }
-        }
+        $this->setRegisterInstances($map);
+        $this->setInstances($map);
     }
 
     /**
      * @param InstanceMap $map
      *
-     * @return array
+     * @return void
      */
-    private function getRegisterInstances(InstanceMap $map): array
+    private function setRegisterInstances(InstanceMap $map): void
     {
-        $m = [];
         foreach ($map->getRegisterMap() as $item) {
-            $m[$item] = new $item();
+            $this->instances[$item] = new $item();
         }
-        return $m;
+    }
+
+    /**
+     * @param InstanceMap $map
+     * @return void
+     *
+     * @throws ContainerMapException
+     */
+    private function setInstances(InstanceMap $map): void
+    {
+        foreach ($map->getInstanceMap() as $instance) {
+            try {
+                $constrParams = [];
+                foreach ($instance::getConstructDependencies() as $depName) {
+                    $constrParams[] = new $this->instances[$depName];
+                }
+                $this->instances[$instance] = new $instance(...$constrParams);
+            } catch (Throwable $e) {
+                throw new ContainerMapException($e->getMessage());
+            }
+        }
     }
 
     /**
@@ -59,6 +66,6 @@ class Container
      */
     public function getInstance(string $className): ?object
     {
-        return $this->classes[$className] ?? null;
+        return $this->instances[$className] ?? null;
     }
 }
